@@ -19,51 +19,51 @@ namespace VillainLairManager.Models
         public string MoodStatus { get; set; }
         public DateTime LastMoodUpdate { get; set; }
 
-        // Business logic mixed into model (anti-pattern)
-        public void UpdateMood()
-        {
-            // Business rules embedded in model
-            if (this.LoyaltyScore > ConfigManager.HighLoyaltyThreshold)
-                this.MoodStatus = ConfigManager.MoodHappy;
-            else if (this.LoyaltyScore < ConfigManager.LowLoyaltyThreshold)
-                this.MoodStatus = ConfigManager.MoodBetrayal;
-            else
-                this.MoodStatus = ConfigManager.MoodGrumpy;
+        //// Business logic mixed into model (anti-pattern)
+        //public void UpdateMood()
+        //{
+        //    // Business rules embedded in model
+        //    if (this.LoyaltyScore > ConfigManager.HighLoyaltyThreshold)
+        //        this.MoodStatus = ConfigManager.MoodHappy;
+        //    else if (this.LoyaltyScore < ConfigManager.LowLoyaltyThreshold)
+        //        this.MoodStatus = ConfigManager.MoodBetrayal;
+        //    else
+        //        this.MoodStatus = ConfigManager.MoodGrumpy;
 
-            this.LastMoodUpdate = DateTime.Now;
+        //    this.LastMoodUpdate = DateTime.Now;
 
-            // Directly accesses database (anti-pattern)
-            DatabaseHelper.UpdateMinion(this);
-        }
+        //    // Directly accesses database (anti-pattern)
+        //    DatabaseHelper.UpdateMinion(this);
+        //}
 
-        // Static utility method in model (anti-pattern)
-        public static bool IsValidSpecialty(string specialty)
-        {
-            // Hardcoded list (duplicated from ValidationHelper)
-            return specialty == "Hacking" || specialty == "Explosives" ||
-                   specialty == "Disguise" || specialty == "Combat" ||
-                   specialty == "Engineering" || specialty == "Piloting";
-        }
+        //// Static utility method in model (anti-pattern)
+        //public static bool IsValidSpecialty(string specialty)
+        //{
+        //    // Hardcoded list (duplicated from ValidationHelper)
+        //    return specialty == "Hacking" || specialty == "Explosives" ||
+        //           specialty == "Disguise" || specialty == "Combat" ||
+        //           specialty == "Engineering" || specialty == "Piloting";
+        //}
 
-        // Business logic for loyalty calculation
-        public void UpdateLoyalty(decimal actualSalaryPaid)
-        {
-            if (actualSalaryPaid >= this.SalaryDemand)
-            {
-                this.LoyaltyScore += ConfigManager.LoyaltyGrowthRate;
-            }
-            else
-            {
-                this.LoyaltyScore -= ConfigManager.LoyaltyDecayRate;
-            }
+        //// Business logic for loyalty calculation
+        //public void UpdateLoyalty(decimal actualSalaryPaid)
+        //{
+        //    if (actualSalaryPaid >= this.SalaryDemand)
+        //    {
+        //        this.LoyaltyScore += ConfigManager.LoyaltyGrowthRate;
+        //    }
+        //    else
+        //    {
+        //        this.LoyaltyScore -= ConfigManager.LoyaltyDecayRate;
+        //    }
 
-            // Clamp to valid range
-            if (this.LoyaltyScore > 100) this.LoyaltyScore = 100;
-            if (this.LoyaltyScore < 0) this.LoyaltyScore = 0;
+        //    // Clamp to valid range
+        //    if (this.LoyaltyScore > 100) this.LoyaltyScore = 100;
+        //    if (this.LoyaltyScore < 0) this.LoyaltyScore = 0;
 
-            // Update mood based on new loyalty
-            UpdateMood();
-        }
+        //    // Update mood based on new loyalty
+        //    UpdateMood();
+        //}
 
         // ToString for ComboBox display
         public override string ToString()

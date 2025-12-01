@@ -8,15 +8,15 @@ using VillainLairManager.Utils;
 namespace VillainLairManager
 {
     /// <summary>
-    /// Static singleton database helper - THE MAIN ANTI-PATTERN
+    /// singleton database helper - THE MAIN ANTI-PATTERN
     /// This god class handles all database operations and some business logic
     /// </summary>
-    public static class DatabaseHelper
+    public class DatabaseHelper : IRepository
     {
-        private static SQLiteConnection _connection = null;
-        private static bool _isInitialized = false;
+        private SQLiteConnection _connection = null;
+        private bool _isInitialized = false;
 
-        public static void Initialize()
+        public void Initialize()
         {
             if (_isInitialized)
                 return;
@@ -27,7 +27,7 @@ namespace VillainLairManager
             _isInitialized = true;
         }
 
-        public static void CreateSchemaIfNotExists()
+        public void CreateSchemaIfNotExists()
         {
             // Minions table
             ExecuteNonQuery(@"
@@ -99,13 +99,13 @@ namespace VillainLairManager
             ");
         }
 
-        private static void ExecuteNonQuery(string sql)
+        private void ExecuteNonQuery(string sql)
         {
             var command = new SQLiteCommand(sql, _connection);
             command.ExecuteNonQuery();
         }
 
-        public static void SeedInitialData()
+        public void SeedInitialData()
         {
             // Check if data already exists (but always seed anyway - anti-pattern)
             var minionCount = ExecuteScalar<long>("SELECT COUNT(*) FROM Minions");
@@ -166,7 +166,7 @@ namespace VillainLairManager
 
         // ===== MINION CRUD OPERATIONS =====
 
-        public static List<Minion> GetAllMinions()
+        public List<Minion> GetAllMinions()
         {
             var minions = new List<Minion>();
             var command = new SQLiteCommand("SELECT * FROM Minions", _connection);
@@ -192,7 +192,7 @@ namespace VillainLairManager
             return minions;
         }
 
-        public static Minion GetMinionById(int minionId)
+        public Minion GetMinionById(int minionId)
         {
             var command = new SQLiteCommand("SELECT * FROM Minions WHERE MinionId = @id", _connection);
             command.Parameters.AddWithValue("@id", minionId);
@@ -218,7 +218,7 @@ namespace VillainLairManager
             return null;
         }
 
-        public static void InsertMinion(Minion minion)
+        public void InsertMinion(Minion minion)
         {
             var sql = @"INSERT INTO Minions (Name, SkillLevel, Specialty, LoyaltyScore, SalaryDemand, CurrentBaseId, CurrentSchemeId, MoodStatus, LastMoodUpdate)
                        VALUES (@name, @skill, @specialty, @loyalty, @salary, @baseId, @schemeId, @mood, @lastUpdate)";
@@ -235,7 +235,7 @@ namespace VillainLairManager
             command.ExecuteNonQuery();
         }
 
-        public static void UpdateMinion(Minion minion)
+        public void UpdateMinion(Minion minion)
         {
             var sql = @"UPDATE Minions SET Name = @name, SkillLevel = @skill, Specialty = @specialty,
                        LoyaltyScore = @loyalty, SalaryDemand = @salary, CurrentBaseId = @baseId,
@@ -255,7 +255,7 @@ namespace VillainLairManager
             command.ExecuteNonQuery();
         }
 
-        public static void DeleteMinion(int minionId)
+        public void DeleteMinion(int minionId)
         {
             // No error handling - just delete (anti-pattern)
             var command = new SQLiteCommand("DELETE FROM Minions WHERE MinionId = @id", _connection);
@@ -265,7 +265,7 @@ namespace VillainLairManager
 
         // ===== EVIL SCHEME CRUD OPERATIONS =====
 
-        public static List<EvilScheme> GetAllSchemes()
+        public List<EvilScheme> GetAllSchemes()
         {
             var schemes = new List<EvilScheme>();
             var command = new SQLiteCommand("SELECT * FROM EvilSchemes", _connection);
@@ -293,7 +293,7 @@ namespace VillainLairManager
             return schemes;
         }
 
-        public static EvilScheme GetSchemeById(int schemeId)
+        public EvilScheme GetSchemeById(int schemeId)
         {
             var command = new SQLiteCommand("SELECT * FROM EvilSchemes WHERE SchemeId = @id", _connection);
             command.Parameters.AddWithValue("@id", schemeId);
@@ -321,7 +321,7 @@ namespace VillainLairManager
             return null;
         }
 
-        public static void InsertScheme(EvilScheme scheme)
+        public void InsertScheme(EvilScheme scheme)
         {
             var sql = @"INSERT INTO EvilSchemes (Name, Description, Budget, CurrentSpending, RequiredSkillLevel, RequiredSpecialty, Status, StartDate, TargetCompletionDate, DiabolicalRating, SuccessLikelihood)
                        VALUES (@name, @desc, @budget, @spending, @skill, @specialty, @status, @start, @target, @rating, @success)";
@@ -340,7 +340,7 @@ namespace VillainLairManager
             command.ExecuteNonQuery();
         }
 
-        public static void UpdateScheme(EvilScheme scheme)
+        public void UpdateScheme(EvilScheme scheme)
         {
             var sql = @"UPDATE EvilSchemes SET Name = @name, Description = @desc, Budget = @budget,
                        CurrentSpending = @spending, RequiredSkillLevel = @skill, RequiredSpecialty = @specialty,
@@ -363,7 +363,7 @@ namespace VillainLairManager
             command.ExecuteNonQuery();
         }
 
-        public static void DeleteScheme(int schemeId)
+        public void DeleteScheme(int schemeId)
         {
             var command = new SQLiteCommand("DELETE FROM EvilSchemes WHERE SchemeId = @id", _connection);
             command.Parameters.AddWithValue("@id", schemeId);
@@ -372,7 +372,7 @@ namespace VillainLairManager
 
         // ===== SECRET BASE CRUD OPERATIONS =====
 
-        public static List<SecretBase> GetAllBases()
+        public List<SecretBase> GetAllBases()
         {
             var bases = new List<SecretBase>();
             var command = new SQLiteCommand("SELECT * FROM SecretBases", _connection);
@@ -397,7 +397,7 @@ namespace VillainLairManager
             return bases;
         }
 
-        public static SecretBase GetBaseById(int baseId)
+        public SecretBase GetBaseById(int baseId)
         {
             var command = new SQLiteCommand("SELECT * FROM SecretBases WHERE BaseId = @id", _connection);
             command.Parameters.AddWithValue("@id", baseId);
@@ -422,7 +422,7 @@ namespace VillainLairManager
             return null;
         }
 
-        public static void InsertBase(SecretBase baseObj)
+        public void InsertBase(SecretBase baseObj)
         {
             var sql = @"INSERT INTO SecretBases (Name, Location, Capacity, SecurityLevel, MonthlyMaintenanceCost, HasDoomsdayDevice, IsDiscovered, LastInspectionDate)
                        VALUES (@name, @location, @capacity, @security, @cost, @doomsday, @discovered, @inspection)";
@@ -438,7 +438,7 @@ namespace VillainLairManager
             command.ExecuteNonQuery();
         }
 
-        public static void UpdateBase(SecretBase baseObj)
+        public void UpdateBase(SecretBase baseObj)
         {
             var sql = @"UPDATE SecretBases SET Name = @name, Location = @location, Capacity = @capacity,
                        SecurityLevel = @security, MonthlyMaintenanceCost = @cost, HasDoomsdayDevice = @doomsday,
@@ -457,7 +457,7 @@ namespace VillainLairManager
             command.ExecuteNonQuery();
         }
 
-        public static void DeleteBase(int baseId)
+        public void DeleteBase(int baseId)
         {
             var command = new SQLiteCommand("DELETE FROM SecretBases WHERE BaseId = @id", _connection);
             command.Parameters.AddWithValue("@id", baseId);
@@ -466,7 +466,7 @@ namespace VillainLairManager
 
         // ===== EQUIPMENT CRUD OPERATIONS =====
 
-        public static List<Equipment> GetAllEquipment()
+        public List<Equipment> GetAllEquipment()
         {
             var equipment = new List<Equipment>();
             var command = new SQLiteCommand("SELECT * FROM Equipment", _connection);
@@ -492,7 +492,7 @@ namespace VillainLairManager
             return equipment;
         }
 
-        public static Equipment GetEquipmentById(int equipmentId)
+        public Equipment GetEquipmentById(int equipmentId)
         {
             var command = new SQLiteCommand("SELECT * FROM Equipment WHERE EquipmentId = @id", _connection);
             command.Parameters.AddWithValue("@id", equipmentId);
@@ -518,7 +518,7 @@ namespace VillainLairManager
             return null;
         }
 
-        public static void InsertEquipment(Equipment equipment)
+        public void InsertEquipment(Equipment equipment)
         {
             var sql = @"INSERT INTO Equipment (Name, Category, Condition, PurchasePrice, MaintenanceCost, AssignedToSchemeId, StoredAtBaseId, RequiresSpecialist, LastMaintenanceDate)
                        VALUES (@name, @category, @condition, @price, @maintenance, @schemeId, @baseId, @specialist, @lastMaint)";
@@ -535,7 +535,7 @@ namespace VillainLairManager
             command.ExecuteNonQuery();
         }
 
-        public static void UpdateEquipment(Equipment equipment)
+        public void UpdateEquipment(Equipment equipment)
         {
             var sql = @"UPDATE Equipment SET Name = @name, Category = @category, Condition = @condition,
                        PurchasePrice = @price, MaintenanceCost = @maintenance, AssignedToSchemeId = @schemeId,
@@ -555,7 +555,7 @@ namespace VillainLairManager
             command.ExecuteNonQuery();
         }
 
-        public static void DeleteEquipment(int equipmentId)
+        public void DeleteEquipment(int equipmentId)
         {
             var command = new SQLiteCommand("DELETE FROM Equipment WHERE EquipmentId = @id", _connection);
             command.Parameters.AddWithValue("@id", equipmentId);
@@ -564,25 +564,25 @@ namespace VillainLairManager
 
         // ===== HELPER QUERIES =====
 
-        public static int GetBaseOccupancy(int baseId)
+        public int GetBaseOccupancy(int baseId)
         {
             return ExecuteScalar<int>("SELECT COUNT(*) FROM Minions WHERE CurrentBaseId = @id",
                 new SQLiteParameter("@id", baseId));
         }
 
-        public static int GetSchemeAssignedMinionsCount(int schemeId)
+        public int GetSchemeAssignedMinionsCount(int schemeId)
         {
             return ExecuteScalar<int>("SELECT COUNT(*) FROM Minions WHERE CurrentSchemeId = @id",
                 new SQLiteParameter("@id", schemeId));
         }
 
-        public static int GetSchemeAssignedEquipmentCount(int schemeId)
+        public int GetSchemeAssignedEquipmentCount(int schemeId)
         {
             return ExecuteScalar<int>("SELECT COUNT(*) FROM Equipment WHERE AssignedToSchemeId = @id",
                 new SQLiteParameter("@id", schemeId));
         }
 
-        private static T ExecuteScalar<T>(string sql, params SQLiteParameter[] parameters)
+        private T ExecuteScalar<T>(string sql, params SQLiteParameter[] parameters)
         {
             var command = new SQLiteCommand(sql, _connection);
             if (parameters != null)
