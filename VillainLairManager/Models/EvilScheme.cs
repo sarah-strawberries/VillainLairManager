@@ -8,6 +8,13 @@ namespace VillainLairManager.Models
     /// </summary>
     public class EvilScheme
     {
+        private readonly IRepository _databaseHelper;
+
+        public EvilScheme(IRepository databaseHelper)
+        {
+            _databaseHelper = databaseHelper;
+        }
+
         public int SchemeId { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
@@ -28,7 +35,7 @@ namespace VillainLairManager.Models
             int baseSuccess = 50;
 
             // Get assigned minions from database (model accessing database - anti-pattern)
-            var assignedMinions = DatabaseHelper.GetAllMinions();
+            var assignedMinions = _databaseHelper.GetAllMinions();
             int matchingMinions = 0;
             int totalMinions = 0;
 
@@ -47,7 +54,7 @@ namespace VillainLairManager.Models
             int minionBonus = matchingMinions * 10;
 
             // Get assigned equipment
-            var assignedEquipment = DatabaseHelper.GetAllEquipment();
+            var assignedEquipment = _databaseHelper.GetAllEquipment();
             int workingEquipmentCount = 0;
 
             foreach (var equipment in assignedEquipment)

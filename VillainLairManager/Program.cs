@@ -17,15 +17,16 @@ namespace VillainLairManager
             Application.SetCompatibleTextRenderingDefault(false);
 
             // Initialize database - no error handling (anti-pattern)
-            DatabaseHelper.Initialize();
+            var dbHelper = new DatabaseHelper();
+            dbHelper.Initialize();
 
             // Create schema if needed
-            DatabaseHelper.CreateSchemaIfNotExists();
+            dbHelper.CreateSchemaIfNotExists();
 
             // Seed data on first run - no check if already seeded (anti-pattern)
-            DatabaseHelper.SeedInitialData();
+            dbHelper.SeedInitialData();
 
-            Application.Run(new MainForm());
+            Application.Run(new MainForm(dbHelper));
         }
     }
 }

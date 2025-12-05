@@ -7,6 +7,13 @@ namespace VillainLairManager.Models
     /// </summary>
     public class SecretBase
     {
+        private readonly IRepository _databaseHelper;
+
+        public SecretBase(IRepository databaseHelper)
+        {
+            _databaseHelper = databaseHelper;
+        }
+
         public int BaseId { get; set; }
         public string Name { get; set; }
         public string Location { get; set; }
@@ -21,7 +28,7 @@ namespace VillainLairManager.Models
         public int GetCurrentOccupancy()
         {
             // Directly calls database (anti-pattern)
-            return DatabaseHelper.GetBaseOccupancy(this.BaseId);
+            return _databaseHelper.GetBaseOccupancy(this.BaseId);
         }
 
         public int GetAvailableCapacity()

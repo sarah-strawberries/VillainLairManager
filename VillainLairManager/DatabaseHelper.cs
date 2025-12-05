@@ -273,7 +273,7 @@ namespace VillainLairManager
 
             while (reader.Read())
             {
-                schemes.Add(new EvilScheme
+                schemes.Add(new EvilScheme(this)
                 {
                     SchemeId = reader.GetInt32(0),
                     Name = reader.GetString(1),
@@ -301,7 +301,7 @@ namespace VillainLairManager
 
             if (reader.Read())
             {
-                return new EvilScheme
+                return new EvilScheme(this)
                 {
                     SchemeId = reader.GetInt32(0),
                     Name = reader.GetString(1),
@@ -380,7 +380,9 @@ namespace VillainLairManager
 
             while (reader.Read())
             {
-                bases.Add(new SecretBase
+                // Might not be appropriate to pass 'this' here depending on context 
+                // TODO: verify
+                bases.Add(new SecretBase(this)
                 {
                     BaseId = reader.GetInt32(0),
                     Name = reader.GetString(1),
@@ -405,7 +407,7 @@ namespace VillainLairManager
 
             if (reader.Read())
             {
-                return new SecretBase
+                return new SecretBase(this)
                 {
                     BaseId = reader.GetInt32(0),
                     Name = reader.GetString(1),
@@ -474,7 +476,7 @@ namespace VillainLairManager
 
             while (reader.Read())
             {
-                equipment.Add(new Equipment
+                equipment.Add(new Equipment(this)
                 {
                     EquipmentId = reader.GetInt32(0),
                     Name = reader.GetString(1),
@@ -500,7 +502,7 @@ namespace VillainLairManager
 
             if (reader.Read())
             {
-                return new Equipment
+                return new Equipment(this)  
                 {
                     EquipmentId = reader.GetInt32(0),
                     Name = reader.GetString(1),

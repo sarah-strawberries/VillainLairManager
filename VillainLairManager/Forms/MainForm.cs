@@ -13,8 +13,11 @@ namespace VillainLairManager.Forms
     /// </summary>
     public partial class MainForm : Form
     {
-        public MainForm()
+        private readonly IRepository _databaseHelper;
+
+        public MainForm(IRepository databaseHelper)
         {
+            _databaseHelper = databaseHelper;
             InitializeComponent();
             LoadStatistics(); // Business logic in form load (anti-pattern)
         }
@@ -50,10 +53,10 @@ namespace VillainLairManager.Forms
         private void LoadStatistics()
         {
             // Direct database access from UI (anti-pattern)
-            var minions = DatabaseHelper.GetAllMinions();
-            var schemes = DatabaseHelper.GetAllSchemes();
-            var bases = DatabaseHelper.GetAllBases();
-            var equipment = DatabaseHelper.GetAllEquipment();
+            var minions = _databaseHelper.GetAllMinions();
+            var schemes = _databaseHelper.GetAllSchemes();
+            var bases = _databaseHelper.GetAllBases();
+            var equipment = _databaseHelper.GetAllEquipment();
 
             // Minion statistics with duplicated mood calculation
             int happyCount = 0, grumpyCount = 0, betrayalCount = 0;

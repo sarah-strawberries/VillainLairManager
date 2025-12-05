@@ -8,6 +8,12 @@ namespace VillainLairManager.Models
     /// </summary>
     public class Equipment
     {
+        private readonly IRepository _databaseHelper;
+
+        public Equipment(IRepository databaseHelper)
+        {
+            _databaseHelper = databaseHelper;
+        }
         public int EquipmentId { get; set; }
         public string Name { get; set; }
         public string Category { get; set; }
@@ -25,7 +31,7 @@ namespace VillainLairManager.Models
             if (AssignedToSchemeId.HasValue)
             {
                 // Check if scheme is active
-                var scheme = DatabaseHelper.GetSchemeById(AssignedToSchemeId.Value);
+                var scheme = _databaseHelper.GetSchemeById(AssignedToSchemeId.Value);
                 if (scheme != null && scheme.Status == ConfigManager.StatusActive)
                 {
                     int monthsSinceMaintenance = 1; // Simplified - should calculate from LastMaintenanceDate
@@ -34,7 +40,7 @@ namespace VillainLairManager.Models
 
                     if (Condition < 0) Condition = 0;
 
-                    DatabaseHelper.UpdateEquipment(this);
+                    _databaseHelper.UpdateEquipment(this);
                 }
             }
         }
@@ -55,7 +61,7 @@ namespace VillainLairManager.Models
             Condition = 100;
             LastMaintenanceDate = DateTime.Now;
 
-            DatabaseHelper.UpdateEquipment(this);
+            _databaseHelper.UpdateEquipment(this);
 
             return cost;
         }

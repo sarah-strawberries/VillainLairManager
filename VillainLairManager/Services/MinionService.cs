@@ -8,15 +8,13 @@ using VillainLairManager.Utils;
 
 namespace VillainLairManager.Services
 {
-    public class MinionService
+    public class MinionService(IRepository DatabaseHelper)
     {
         public Dictionary<int, Minion> Minions { get; set; }
-        public IRepository DatabaseHelper = DIContainer._repositoryInstance;
 
         public void UpdateMood(int minionid)
         {
             var minion = Minions[minionid];
-            // Business rules embedded in model
             if (minion.LoyaltyScore > ConfigManager.HighLoyaltyThreshold)
                 minion.MoodStatus = ConfigManager.MoodHappy;
             else if (minion.LoyaltyScore < ConfigManager.LowLoyaltyThreshold)
@@ -26,7 +24,6 @@ namespace VillainLairManager.Services
 
             minion.LastMoodUpdate = DateTime.Now;
 
-            // Directly accesses database (anti-pattern)
             DatabaseHelper.UpdateMinion(minion);
         }
 
