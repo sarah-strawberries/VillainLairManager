@@ -8,7 +8,7 @@ using VillainLairManager.Utils;
 
 namespace VillainLairManager.Services
 {
-    public class MinionService(IRepository DatabaseHelper)
+    public class MinionService(IRepository DatabaseHelper) : IMinionService
     {
         public Dictionary<int, Minion> Minions { get; set; }
 
