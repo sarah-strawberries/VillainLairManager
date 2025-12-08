@@ -8,11 +8,11 @@
 - [ ] Repository pattern implementation with interfaces
 ## 8pts
 - [ ] Identification and explanation of five or more anti-patterns with specific locations
-     [ ] 1.
-     1. [ ]
-     1. [ ]
-     1. [ ]
-     1. [ ]
+     - [ ] 1.
+     - [ ] 2.
+     - [ ] 3.
+     - [ ] 4.
+     - [ ] 5.
 ## 5pts
 - [ ] Configuration extraction for hardcoded values
 - [ ] Complete submission with all required components
