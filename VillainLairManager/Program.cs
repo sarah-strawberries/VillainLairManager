@@ -1,8 +1,10 @@
 using System;
+using System.Data.SQLite;
 using System.Windows.Forms;
 using Microsoft.Extensions.DependencyInjection;
 using VillainLairManager.Forms;
 using VillainLairManager.Services;
+using VillainLairManager.Utils;
 
 namespace VillainLairManager
 {
@@ -21,8 +23,13 @@ namespace VillainLairManager
             // Setup Dependency Injection
             var services = new ServiceCollection();
             
+            // Register database connection
+            var dbConnection = new SQLiteConnection($"Data Source={ConfigManager.DatabasePath};Version=3;");
+            services.AddSingleton(dbConnection);
+            
             // Register core services
-            services.AddSingleton<IRepository, DatabaseHelper>();
+            services.AddSingleton<IRepository>(provider => 
+                new DatabaseHelper(provider.GetRequiredService<SQLiteConnection>()));
             services.AddSingleton<IEvilSchemeService, EvilSchemeService>();
             services.AddSingleton<ISecretBaseService, SecretBaseService>();
             services.AddSingleton<IEquipmentService, EquipmentService>();

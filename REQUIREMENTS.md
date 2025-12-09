@@ -16,7 +16,7 @@
 ## 5pts
 - [ ] Configuration extraction for hardcoded values
 - [ ] Complete submission with all required components
-- [ ] Elimination of code duplication
+- [X] Elimination of code duplication
 - [X] Dependency injection implementation
 - [X] Test project setup and configuration
 - [ ] Achievement of 50%+ code coverage on business logic

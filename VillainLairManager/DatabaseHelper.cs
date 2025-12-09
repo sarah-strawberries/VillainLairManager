@@ -16,14 +16,20 @@ namespace VillainLairManager
         private SQLiteConnection _connection = null;
         private bool _isInitialized = false;
 
+        public DatabaseHelper(SQLiteConnection connection)
+        {
+            _connection = connection;
+        }
+
         public void Initialize()
         {
             if (_isInitialized)
                 return;
 
-            string dbPath = ConfigManager.DatabasePath;
-            _connection = new SQLiteConnection($"Data Source={dbPath};Version=3;");
-            _connection.Open();
+            if (_connection.State == ConnectionState.Closed)
+            {
+                _connection.Open();
+            }
             _isInitialized = true;
         }
 

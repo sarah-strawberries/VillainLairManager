@@ -3,8 +3,16 @@ using VillainLairManager.Services;
 using NSubstitute;
 using NUnit.Framework;
 using VillainLairManager;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 namespace VillainousTesting;
 
+/// <summary>
+/// Unit tests for Minion service operations
+/// Tests basic service functionality with mocked repository
+/// </summary>
 public class MinionTests
 {
     private IRepository mockRepository;
@@ -14,111 +22,143 @@ public class MinionTests
         mockRepository = Substitute.For<IRepository>();
     }
 
-    [Test]
-    public void TestUpdateMood()
+    [TestCase(80, Description = "High loyalty minion mood update")]
+    [TestCase(50, Description = "Medium loyalty minion mood update")]
+    [TestCase(20, Description = "Low loyalty minion mood update")]
+    public void TestUpdateMood(int loyaltyScore)
     {
         MinionService minionService = new(mockRepository);
         minionService.Minions = new Dictionary<int, Minion>
         {
-            { 1, new Minion { MinionId = 1, Name = "Test Minion", LoyaltyScore = 80, MoodStatus = "" } }
+            { 1, new Minion { MinionId = 1, Name = "Test Minion", LoyaltyScore = loyaltyScore, MoodStatus = "", LastMoodUpdate = DateTime.Now } }
         };
+        
         minionService.UpdateMood(1);
 
+        Assert.That(minionService.Minions[1].MoodStatus, Is.Not.Empty);
     }
 
-    [Test]
-    public void updateLoyaltyScoreSatisfiedMinion()
+    [TestCase(70, 5000, 5000, 73, Description = "Satisfied minion loyalty increase")]
+    [TestCase(50, 5000, 4000, 45, Description = "Underpaid minion loyalty decrease")]
+    [TestCase(95, 5000, 6000, 98, Description = "Overpaid minion clamped")]
+    public void UpdateLoyaltyScore(int initialLoyalty, decimal salaryDemand, decimal amountPaid, int expectedLoyalty)
     {
         MinionService minionService = new(mockRepository);
         minionService.Minions = new Dictionary<int, Minion>
         {
-            { 1, new Minion { MinionId = 1, Name = "Test Satisfied Minion", LoyaltyScore = 70, SalaryDemand=5000} }
+            { 1, new Minion { MinionId = 1, Name = "Test Minion", LoyaltyScore = initialLoyalty, SalaryDemand = salaryDemand} }
         };
-        minionService.UpdateLoyalty(1, 5000);
-        Assert.That(minionService.Minions[1].LoyaltyScore, Is.EqualTo(73));
+        
+        minionService.UpdateLoyalty(1, amountPaid);
+        
+        Assert.That(minionService.Minions[1].LoyaltyScore, Is.EqualTo(expectedLoyalty));
     }
 
-    // CRUD Operation Tests
-
-    [Test]
-    public void GetMinionById_ReturnsMinion_WhenExists()
+    [TestCase(1, "Test Minion", Description = "Get single minion")]
+    [TestCase(2, "Another Minion", Description = "Get different minion")]
+    public void GetMinionById_ReturnsMinion_WhenExists(int minionId, string expectedName)
     {
-        var minion = new Minion { MinionId = 1, Name = "Test Minion", LoyaltyScore = 50 };
+        var minion = new Minion { MinionId = minionId, Name = expectedName, LoyaltyScore = 50 };
         var minionService = new MinionService(mockRepository);
-        minionService.Minions = new Dictionary<int, Minion> { { 1, minion } };
+        minionService.Minions = new Dictionary<int, Minion> { { minionId, minion } };
 
-        var result = minionService.GetMinionById(1);
+        var result = minionService.GetMinionById(minionId);
 
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.MinionId, Is.EqualTo(1));
-        Assert.That(result.Name, Is.EqualTo("Test Minion"));
+        Assert.That(result.MinionId, Is.EqualTo(minionId));
+        Assert.That(result.Name, Is.EqualTo(expectedName));
     }
 
-    [Test]
-    public void GetMinionById_ReturnsNull_WhenNotExists()
+    [TestCase(999, Description = "Get non-existent minion")]
+    [TestCase(0, Description = "Get with invalid ID")]
+    public void GetMinionById_ReturnsNull_WhenNotExists(int minionId)
     {
         var minionService = new MinionService(mockRepository);
         minionService.Minions = new Dictionary<int, Minion>();
 
-        var result = minionService.GetMinionById(999);
+        var result = minionService.GetMinionById(minionId);
 
         Assert.That(result, Is.Null);
     }
 
-    [Test]
-    public void GetAllMinions_ReturnsAllMinions()
+    [TestCase(1, 3, Description = "Get all minions with 3 minions")]
+    [TestCase(2, 5, Description = "Get all minions with 5 minions")]
+    public void GetAllMinions_ReturnsAllMinions(int unused, int count)
     {
-        var minions = new Dictionary<int, Minion>
+        var minions = new Dictionary<int, Minion>();
+        for (int i = 1; i <= count; i++)
         {
-            { 1, new Minion { MinionId = 1, Name = "Minion 1", LoyaltyScore = 50 } },
-            { 2, new Minion { MinionId = 2, Name = "Minion 2", LoyaltyScore = 70 } },
-            { 3, new Minion { MinionId = 3, Name = "Minion 3", LoyaltyScore = 30 } }
-        };
+            minions[i] = new Minion { MinionId = i, Name = $"Minion {i}", LoyaltyScore = 50 };
+        }
         var minionService = new MinionService(mockRepository);
         minionService.Minions = minions;
 
         var result = minionService.GetAllMinions().ToList();
 
-        Assert.That(result, Has.Count.EqualTo(3));
-        Assert.That(result.Any(m => m.MinionId == 1), Is.True);
-        Assert.That(result.Any(m => m.MinionId == 2), Is.True);
-        Assert.That(result.Any(m => m.MinionId == 3), Is.True);
+        Assert.That(result, Has.Count.EqualTo(count));
+        for (int i = 1; i <= count; i++)
+        {
+            Assert.That(result.Any(m => m.MinionId == i), Is.True);
+        }
     }
 
-    [Test]
-    public void CreateMinion_AddsToCache_AndCallsRepository()
+    [TestCase(5, "New Minion", "Hacking", Description = "Create hacking minion")]
+    [TestCase(10, "Combat Expert", "Combat", Description = "Create combat minion")]
+    public void CreateMinion_AddsToCache_AndCallsRepository(int minionId, string name, string specialty)
     {
-        var newMinion = new Minion { MinionId = 5, Name = "New Minion", LoyaltyScore = 50, Specialty = "Hacking", SkillLevel = 5, SalaryDemand = 5000m };
+        var newMinion = new Minion 
+        { 
+            MinionId = minionId, 
+            Name = name, 
+            LoyaltyScore = 50, 
+            Specialty = specialty, 
+            SkillLevel = 5, 
+            SalaryDemand = 5000m,
+            MoodStatus = "Happy",
+            LastMoodUpdate = DateTime.Now
+        };
         var minionService = new MinionService(mockRepository);
         minionService.Minions = new Dictionary<int, Minion>();
 
         var result = minionService.CreateMinion(newMinion);
 
         Assert.That(result, Is.EqualTo(newMinion));
-        Assert.That(minionService.Minions.ContainsKey(5), Is.True);
+        Assert.That(minionService.Minions.ContainsKey(minionId), Is.True);
         mockRepository.Received(1).InsertMinion(newMinion);
     }
 
-    [Test]
-    public void UpdateMinion_UpdatesCache_AndCallsRepository()
-    {
-        var minion = new Minion { MinionId = 1, Name = "Original", LoyaltyScore = 50, Specialty = "Combat", SkillLevel = 5, SalaryDemand = 5000m };
-        var minionService = new MinionService(mockRepository);
-        minionService.Minions = new Dictionary<int, Minion> { { 1, minion } };
 
-        minion.Name = "Updated";
-        minion.LoyaltyScore = 75;
+    [TestCase(1, "Updated Igor", 75, Description = "Update name and loyalty")]
+    [TestCase(2, "Updated Helga", 60, Description = "Update different minion")]
+    public void UpdateMinion_UpdatesCache_AndCallsRepository(int minionId, string newName, int newLoyalty)
+    {
+        var minion = new Minion 
+        { 
+            MinionId = minionId, 
+            Name = "Original", 
+            LoyaltyScore = 50, 
+            Specialty = "Combat", 
+            SkillLevel = 5, 
+            SalaryDemand = 5000m,
+            MoodStatus = "Happy",
+            LastMoodUpdate = DateTime.Now
+        };
+        var minionService = new MinionService(mockRepository);
+        minionService.Minions = new Dictionary<int, Minion> { { minionId, minion } };
+
+        minion.Name = newName;
+        minion.LoyaltyScore = newLoyalty;
         minionService.UpdateMinion(minion);
 
-        Assert.That(minionService.Minions[1].Name, Is.EqualTo("Updated"));
-        Assert.That(minionService.Minions[1].LoyaltyScore, Is.EqualTo(75));
+        Assert.That(minionService.Minions[minionId].Name, Is.EqualTo(newName));
+        Assert.That(minionService.Minions[minionId].LoyaltyScore, Is.EqualTo(newLoyalty));
         mockRepository.Received(1).UpdateMinion(minion);
     }
 
-    [Test]
-    public void UpdateMinion_DoesNotUpdate_WhenMinionNotExists()
+    [TestCase(999, Description = "Update non-existent minion")]
+    public void UpdateMinion_DoesNotUpdate_WhenMinionNotExists(int minionId)
     {
-        var minion = new Minion { MinionId = 999, Name = "Nonexistent", LoyaltyScore = 50 };
+        var minion = new Minion { MinionId = minionId, Name = "Nonexistent", LoyaltyScore = 50 };
         var minionService = new MinionService(mockRepository);
         minionService.Minions = new Dictionary<int, Minion>();
 
@@ -127,29 +167,29 @@ public class MinionTests
         mockRepository.DidNotReceive().UpdateMinion(Arg.Any<Minion>());
     }
 
-    [Test]
-    public void DeleteMinion_RemovesFromCache_AndCallsRepository()
+    [TestCase(1, Description = "Delete first minion")]
+    [TestCase(2, Description = "Delete second minion")]
+    public void DeleteMinion_RemovesFromCache_AndCallsRepository(int minionId)
     {
-        var minion = new Minion { MinionId = 1, Name = "To Delete", LoyaltyScore = 50 };
+        var minion = new Minion { MinionId = minionId, Name = "To Delete", LoyaltyScore = 50 };
         var minionService = new MinionService(mockRepository);
-        minionService.Minions = new Dictionary<int, Minion> { { 1, minion } };
+        minionService.Minions = new Dictionary<int, Minion> { { minionId, minion } };
 
-        minionService.DeleteMinion(1);
+        minionService.DeleteMinion(minionId);
 
-        Assert.That(minionService.Minions.ContainsKey(1), Is.False);
-        mockRepository.Received(1).DeleteMinion(1);
+        Assert.That(minionService.Minions.ContainsKey(minionId), Is.False);
+        mockRepository.Received(1).DeleteMinion(minionId);
     }
 
-    [Test]
-    public void DeleteMinion_DoesNotDelete_WhenMinionNotExists()
+    [TestCase(999, Description = "Delete non-existent minion")]
+    public void DeleteMinion_DoesNotDelete_WhenMinionNotExists(int minionId)
     {
         var minionService = new MinionService(mockRepository);
         minionService.Minions = new Dictionary<int, Minion>();
 
-        minionService.DeleteMinion(999);
+        minionService.DeleteMinion(minionId);
 
         mockRepository.DidNotReceive().DeleteMinion(Arg.Any<int>());
     }
 }
-
 
