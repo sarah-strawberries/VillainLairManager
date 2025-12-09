@@ -7,7 +7,20 @@ namespace VillainLairManager.Services
 {
     public class EvilSchemeService(IRepository DatabaseHelper) : IEvilSchemeService
     {
-        public Dictionary<int, EvilScheme> Schemes { get; set; }
+        public Dictionary<int, EvilScheme> Schemes { get; set; } = new Dictionary<int, EvilScheme>();
+
+        /// <summary>
+        /// Initializes the Schemes cache from the database
+        /// </summary>
+        public void InitializeSchemes()
+        {
+            Schemes.Clear();
+            var schemes = DatabaseHelper.GetAllSchemes();
+            foreach (var scheme in schemes)
+            {
+                Schemes[scheme.SchemeId] = scheme;
+            }
+        }
 
         /// <summary>
         /// Calculates the success likelihood of a scheme based on assigned minions, equipment, and other factors

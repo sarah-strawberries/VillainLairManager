@@ -10,6 +10,11 @@ namespace VillainLairManager.Services
     public interface IEvilSchemeService
     {
         /// <summary>
+        /// Initializes the Schemes cache from the database
+        /// </summary>
+        void InitializeSchemes();
+
+        /// <summary>
         /// Calculates the success likelihood of a scheme based on assigned minions, equipment, and other factors
         /// BR-S-001: Success Likelihood Calculation
         /// </summary>
