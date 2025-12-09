@@ -116,7 +116,7 @@ namespace VillainLairManager.Services
                 scheme.AllowNewAssignments = false;
                 return ("Over Budget - Action Required", false);
             }
-            else if (scheme.CurrentSpending > scheme.Budget * 0.9m)
+            else if (scheme.CurrentSpending > scheme.Budget * 0.9m && scheme.CurrentSpending < scheme.Budget)
             {
                 scheme.AllowNewAssignments = true;
                 return ("Approaching Budget Limit", true);

@@ -241,8 +241,9 @@ public class EvilSchemeRulesTests
 
         var (status, allowNew) = schemeService.ValidateBudgetStatus(1);
 
-        // 100000 is NOT > 100000, but 100000 IS >= 100000 * 0.9 (90000), so it's "Approaching"
-        Assert.That(status, Is.EqualTo("Approaching Budget Limit"));
+        // Per spec: exactly at budget should be "Within Budget" (not "Approaching")
+        // "Approaching" is only for values > 90% AND < 100%
+        Assert.That(status, Is.EqualTo("Within Budget"));
         Assert.That(allowNew, Is.True);
     }
 
