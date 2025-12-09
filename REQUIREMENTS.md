@@ -17,8 +17,8 @@
 - [ ] Configuration extraction for hardcoded values
 - [ ] Complete submission with all required components
 - [ ] Elimination of code duplication
-- [ ] Dependency injection implementation
-- [ ] Test project setup and configuration
+- [X] Dependency injection implementation
+- [X] Test project setup and configuration
 - [ ] Achievement of 50%+ code coverage on business logic
 - [ ] Integration tests for repository implementations
 ## 3pts

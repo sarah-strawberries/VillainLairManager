@@ -1,40 +1,65 @@
 using System;
+using Microsoft.Extensions.Configuration;
+using System.IO;
 
 namespace VillainLairManager.Utils
 {
     /// <summary>
-    /// Static configuration manager with hardcoded values (anti-pattern)
+    /// Configuration manager that reads from appsettings.json
     /// </summary>
     public static class ConfigManager
     {
-        // Hardcoded database path - no configuration file (anti-pattern)
-        public const string DatabasePath = "villainlair.db";
+        private static IConfiguration _configuration;
 
-        // Magic numbers scattered as constants
-        public const int MaxMinionsPerScheme = 10;
-        public const int MaxEquipmentPerScheme = 5;
-        public const decimal DefaultMinionSalary = 5000.0m;
-        public const int LoyaltyDecayRate = 5;
-        public const int LoyaltyGrowthRate = 3;
-        public const int ConditionDegradationRate = 5;
-        public const decimal MaintenanceCostPercentage = 0.15m;
-        public const decimal DoomsdayMaintenanceCostPercentage = 0.30m;
+        static ConfigManager()
+        {
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
-        // Magic strings for mood status
-        public const string MoodHappy = "Happy";
-        public const string MoodGrumpy = "Grumpy";
-        public const string MoodBetrayal = "Plotting Betrayal";
-        public const string MoodExhausted = "Exhausted";
+            _configuration = builder.Build();
+        }
 
-        // Magic strings for scheme status
-        public const string StatusPlanning = "Planning";
-        public const string StatusActive = "Active";
-        public const string StatusOnHold = "On Hold";
-        public const string StatusCompleted = "Completed";
-        public const string StatusFailed = "Failed";
+        // Database Configuration
+        public static string DatabasePath => _configuration["Database:Path"] ?? "villainlair.db";
 
-        // Hardcoded specialty list (duplicated elsewhere too - anti-pattern)
-        public static readonly string[] ValidSpecialties = new string[]
+        // Constraint Configuration
+        public static int MaxMinionsPerScheme => int.Parse(_configuration["Constraints:MaxMinionsPerScheme"] ?? "10");
+        public static int MaxEquipmentPerScheme => int.Parse(_configuration["Constraints:MaxEquipmentPerScheme"] ?? "5");
+
+        // Salary Configuration
+        public static decimal DefaultMinionSalary => decimal.Parse(_configuration["Salary:DefaultMinionSalary"] ?? "5000.0");
+
+        // Loyalty Configuration
+        public static int LoyaltyDecayRate => int.Parse(_configuration["Loyalty:DecayRate"] ?? "5");
+        public static int LoyaltyGrowthRate => int.Parse(_configuration["Loyalty:GrowthRate"] ?? "3");
+        public static int LowLoyaltyThreshold => int.Parse(_configuration["Loyalty:LowThreshold"] ?? "40");
+        public static int HighLoyaltyThreshold => int.Parse(_configuration["Loyalty:HighThreshold"] ?? "70");
+
+        // Equipment Configuration
+        public static int ConditionDegradationRate => int.Parse(_configuration["Equipment:ConditionDegradationRate"] ?? "5");
+        public static decimal MaintenanceCostPercentage => decimal.Parse(_configuration["Equipment:MaintenanceCostPercentage"] ?? "0.15");
+        public static int MinEquipmentCondition => int.Parse(_configuration["Equipment:MinCondition"] ?? "50");
+        public static int BrokenEquipmentCondition => int.Parse(_configuration["Equipment:BrokenCondition"] ?? "20");
+
+        // Base Configuration
+        public static decimal DoomsdayMaintenanceCostPercentage => decimal.Parse(_configuration["Base:DoomsdayMaintenanceCostPercentage"] ?? "0.30");
+
+        // Mood Status Strings
+        public static string MoodHappy => _configuration["Mood:Happy"] ?? "Happy";
+        public static string MoodGrumpy => _configuration["Mood:Grumpy"] ?? "Grumpy";
+        public static string MoodBetrayal => _configuration["Mood:Betrayal"] ?? "Plotting Betrayal";
+        public static string MoodExhausted => _configuration["Mood:Exhausted"] ?? "Exhausted";
+
+        // Scheme Status Strings
+        public static string StatusPlanning => _configuration["Scheme:StatusPlanning"] ?? "Planning";
+        public static string StatusActive => _configuration["Scheme:StatusActive"] ?? "Active";
+        public static string StatusOnHold => _configuration["Scheme:StatusOnHold"] ?? "On Hold";
+        public static string StatusCompleted => _configuration["Scheme:StatusCompleted"] ?? "Completed";
+        public static string StatusFailed => _configuration["Scheme:StatusFailed"] ?? "Failed";
+
+        // Valid Specialties
+        public static string[] ValidSpecialties => _configuration.GetSection("Specialty:ValidSpecialties").Get<string[]>() ?? new[]
         {
             "Hacking",
             "Explosives",
@@ -44,8 +69,8 @@ namespace VillainLairManager.Utils
             "Piloting"
         };
 
-        // Hardcoded equipment categories (duplicated elsewhere too)
-        public static readonly string[] ValidCategories = new string[]
+        // Valid Equipment Categories
+        public static string[] ValidCategories => _configuration.GetSection("Equipment:ValidCategories").Get<string[]>() ?? new[]
         {
             "Weapon",
             "Vehicle",
@@ -53,15 +78,12 @@ namespace VillainLairManager.Utils
             "Doomsday Device"
         };
 
-        // Business rule thresholds
-        public const int LowLoyaltyThreshold = 40;
-        public const int HighLoyaltyThreshold = 70;
-        public const int OverworkedDays = 60;
-        public const int SpecialistSkillLevel = 8;
-        public const int MinEquipmentCondition = 50;
-        public const int BrokenEquipmentCondition = 20;
-        public const int HighDiabolicalRating = 8;
-        public const int SuccessLikelihoodHighThreshold = 70;
-        public const int SuccessLikelihoodLowThreshold = 30;
+        // Business Rules
+        public static int OverworkedDays => int.Parse(_configuration["Business:OverworkedDays"] ?? "60");
+        public static int SpecialistSkillLevel => int.Parse(_configuration["Business:SpecialistSkillLevel"] ?? "8");
+        public static int HighDiabolicalRating => int.Parse(_configuration["Business:HighDiabolicalRating"] ?? "8");
+        public static int SuccessLikelihoodHighThreshold => int.Parse(_configuration["Business:SuccessLikelihoodHighThreshold"] ?? "70");
+        public static int SuccessLikelihoodLowThreshold => int.Parse(_configuration["Business:SuccessLikelihoodLowThreshold"] ?? "30");
     }
 }
+

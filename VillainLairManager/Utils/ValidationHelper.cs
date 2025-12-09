@@ -8,21 +8,16 @@ namespace VillainLairManager.Utils
     /// </summary>
     public static class ValidationHelper
     {
-        // Specialty validation (duplicated in models and forms)
+        // Specialty validation using ConfigManager
         public static bool IsValidSpecialty(string specialty)
         {
-            // Hardcoded list instead of using ConfigManager (anti-pattern)
-            return specialty == "Hacking" || specialty == "Explosives" ||
-                   specialty == "Disguise" || specialty == "Combat" ||
-                   specialty == "Engineering" || specialty == "Piloting";
+            return ConfigManager.ValidSpecialties.Contains(specialty);
         }
 
-        // Category validation (duplicated in models and forms)
+        // Category validation using ConfigManager
         public static bool IsValidCategory(string category)
         {
-            // Another hardcoded list (anti-pattern)
-            return category == "Weapon" || category == "Vehicle" ||
-                   category == "Gadget" || category == "Doomsday Device";
+            return ConfigManager.ValidCategories.Contains(category);
         }
 
         // Skill level validation (duplicated in forms)

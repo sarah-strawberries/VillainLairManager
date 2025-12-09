@@ -18,6 +18,7 @@ namespace VillainLairManager.Models
         public int? CurrentSchemeId { get; set; }
         public string MoodStatus { get; set; }
         public DateTime LastMoodUpdate { get; set; }
+        public DateTime? SchemeAssignmentDate { get; set; }
 
         //// Business logic mixed into model (anti-pattern)
         //public void UpdateMood()

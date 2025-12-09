@@ -42,10 +42,21 @@ namespace VillainLairManager
                     CurrentSchemeId INTEGER,
                     MoodStatus TEXT NOT NULL,
                     LastMoodUpdate TEXT NOT NULL,
+                    SchemeAssignmentDate TEXT,
                     FOREIGN KEY (CurrentBaseId) REFERENCES SecretBases(BaseId) ON DELETE SET NULL,
                     FOREIGN KEY (CurrentSchemeId) REFERENCES EvilSchemes(SchemeId) ON DELETE SET NULL
                 );
             ");
+
+            // Add SchemeAssignmentDate column to existing Minions table (migration for existing databases)
+            try
+            {
+                ExecuteNonQuery("ALTER TABLE Minions ADD COLUMN SchemeAssignmentDate TEXT;");
+            }
+            catch
+            {
+                // Column already exists, ignore error
+            }
 
             // Evil Schemes table
             ExecuteNonQuery(@"
@@ -185,7 +196,8 @@ namespace VillainLairManager
                     CurrentBaseId = reader.IsDBNull(6) ? null : (int?)reader.GetInt32(6),
                     CurrentSchemeId = reader.IsDBNull(7) ? null : (int?)reader.GetInt32(7),
                     MoodStatus = reader.GetString(8),
-                    LastMoodUpdate = DateTime.Parse(reader.GetString(9))
+                    LastMoodUpdate = DateTime.Parse(reader.GetString(9)),
+                    SchemeAssignmentDate = reader.IsDBNull(10) ? null : (DateTime?)DateTime.Parse(reader.GetString(10))
                 });
             }
 
@@ -211,7 +223,8 @@ namespace VillainLairManager
                     CurrentBaseId = reader.IsDBNull(6) ? null : (int?)reader.GetInt32(6),
                     CurrentSchemeId = reader.IsDBNull(7) ? null : (int?)reader.GetInt32(7),
                     MoodStatus = reader.GetString(8),
-                    LastMoodUpdate = DateTime.Parse(reader.GetString(9))
+                    LastMoodUpdate = DateTime.Parse(reader.GetString(9)),
+                    SchemeAssignmentDate = reader.IsDBNull(10) ? null : (DateTime?)DateTime.Parse(reader.GetString(10))
                 };
             }
 
@@ -220,8 +233,8 @@ namespace VillainLairManager
 
         public void InsertMinion(Minion minion)
         {
-            var sql = @"INSERT INTO Minions (Name, SkillLevel, Specialty, LoyaltyScore, SalaryDemand, CurrentBaseId, CurrentSchemeId, MoodStatus, LastMoodUpdate)
-                       VALUES (@name, @skill, @specialty, @loyalty, @salary, @baseId, @schemeId, @mood, @lastUpdate)";
+            var sql = @"INSERT INTO Minions (Name, SkillLevel, Specialty, LoyaltyScore, SalaryDemand, CurrentBaseId, CurrentSchemeId, MoodStatus, LastMoodUpdate, SchemeAssignmentDate)
+                       VALUES (@name, @skill, @specialty, @loyalty, @salary, @baseId, @schemeId, @mood, @lastUpdate, @schemeAssignmentDate)";
             var command = new SQLiteCommand(sql, _connection);
             command.Parameters.AddWithValue("@name", minion.Name);
             command.Parameters.AddWithValue("@skill", minion.SkillLevel);
@@ -231,7 +244,8 @@ namespace VillainLairManager
             command.Parameters.AddWithValue("@baseId", minion.CurrentBaseId.HasValue ? (object)minion.CurrentBaseId.Value : DBNull.Value);
             command.Parameters.AddWithValue("@schemeId", minion.CurrentSchemeId.HasValue ? (object)minion.CurrentSchemeId.Value : DBNull.Value);
             command.Parameters.AddWithValue("@mood", minion.MoodStatus);
-            command.Parameters.AddWithValue("@lastUpdate", minion.LastMoodUpdate.ToString("yyyy-MM-dd"));
+            command.Parameters.AddWithValue("@lastUpdate", minion.LastMoodUpdate.ToString("yyyy-MM-ddTHH:mm:ss"));
+            command.Parameters.AddWithValue("@schemeAssignmentDate", minion.SchemeAssignmentDate.HasValue ? (object)minion.SchemeAssignmentDate.Value.ToString("yyyy-MM-ddTHH:mm:ss") : DBNull.Value);
             command.ExecuteNonQuery();
         }
 
@@ -239,7 +253,7 @@ namespace VillainLairManager
         {
             var sql = @"UPDATE Minions SET Name = @name, SkillLevel = @skill, Specialty = @specialty,
                        LoyaltyScore = @loyalty, SalaryDemand = @salary, CurrentBaseId = @baseId,
-                       CurrentSchemeId = @schemeId, MoodStatus = @mood, LastMoodUpdate = @lastUpdate
+                       CurrentSchemeId = @schemeId, MoodStatus = @mood, LastMoodUpdate = @lastUpdate, SchemeAssignmentDate = @schemeAssignmentDate
                        WHERE MinionId = @id";
             var command = new SQLiteCommand(sql, _connection);
             command.Parameters.AddWithValue("@id", minion.MinionId);
@@ -251,7 +265,8 @@ namespace VillainLairManager
             command.Parameters.AddWithValue("@baseId", minion.CurrentBaseId.HasValue ? (object)minion.CurrentBaseId.Value : DBNull.Value);
             command.Parameters.AddWithValue("@schemeId", minion.CurrentSchemeId.HasValue ? (object)minion.CurrentSchemeId.Value : DBNull.Value);
             command.Parameters.AddWithValue("@mood", minion.MoodStatus);
-            command.Parameters.AddWithValue("@lastUpdate", minion.LastMoodUpdate.ToString("yyyy-MM-dd"));
+            command.Parameters.AddWithValue("@lastUpdate", minion.LastMoodUpdate.ToString("yyyy-MM-ddTHH:mm:ss"));
+            command.Parameters.AddWithValue("@schemeAssignmentDate", minion.SchemeAssignmentDate.HasValue ? (object)minion.SchemeAssignmentDate.Value.ToString("yyyy-MM-ddTHH:mm:ss") : DBNull.Value);
             command.ExecuteNonQuery();
         }
 
