@@ -6,9 +6,18 @@ using VillainLairManager.Utils;
 
 namespace VillainLairManager.Services
 {
-    public class EquipmentService(IRepository DatabaseHelper) : IEquipmentService
+    public class EquipmentService : IEquipmentService
     {
+        private readonly IRepository DatabaseHelper;
         public Dictionary<int, Equipment> Equipment { get; set; }
+
+        public EquipmentService(IRepository databaseHelper)
+        {
+            DatabaseHelper = databaseHelper;
+            // Initialize cache
+            var allEquipment = DatabaseHelper.GetAllEquipment();
+            Equipment = allEquipment.ToDictionary(e => e.EquipmentId);
+        }
 
         /// <summary>
         /// Degrades equipment condition based on usage and maintenance status
@@ -48,7 +57,13 @@ namespace VillainLairManager.Services
         /// </summary>
         public decimal PerformMaintenance(int equipmentId, decimal availableFunds)
         {
-            var equipment = Equipment[equipmentId];
+            // Ensure we have the latest data
+            var equipment = DatabaseHelper.GetEquipmentById(equipmentId);
+            if (equipment == null) throw new Exception("Equipment not found");
+            
+            // Update cache
+            if (Equipment == null) Equipment = new Dictionary<int, Equipment>();
+            Equipment[equipmentId] = equipment;
 
             if (equipment.Condition >= 100)
             {
