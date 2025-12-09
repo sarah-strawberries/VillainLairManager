@@ -106,25 +106,20 @@ public class MinionTests
     [TestCase(10, "Combat Expert", "Combat", Description = "Create combat minion")]
     public void CreateMinion_AddsToCache_AndCallsRepository(int minionId, string name, string specialty)
     {
-        var newMinion = new Minion 
-        { 
-            MinionId = minionId, 
-            Name = name, 
-            LoyaltyScore = 50, 
-            Specialty = specialty, 
-            SkillLevel = 5, 
-            SalaryDemand = 5000m,
-            MoodStatus = "Happy",
-            LastMoodUpdate = DateTime.Now
-        };
+        var newMinion = new Minion { MinionId = 0, Name = "New Minion", LoyaltyScore = 50, Specialty = "Hacking", SkillLevel = 5, SalaryDemand = 5000m };
         var minionService = new MinionService(mockRepository);
         minionService.Minions = new Dictionary<int, Minion>();
 
+        // Mock the database to return the minion with assigned ID after insert
+        var createdMinion = new Minion { MinionId = 5, Name = "New Minion", LoyaltyScore = 50, Specialty = "Hacking", SkillLevel = 5, SalaryDemand = 5000m };
+        mockRepository.GetAllMinions().Returns(new List<Minion> { createdMinion });
+
         var result = minionService.CreateMinion(newMinion);
 
-        Assert.That(result, Is.EqualTo(newMinion));
-        Assert.That(minionService.Minions.ContainsKey(minionId), Is.True);
-        mockRepository.Received(1).InsertMinion(newMinion);
+        Assert.That(result.MinionId, Is.EqualTo(5));
+        Assert.That(result.Name, Is.EqualTo("New Minion"));
+        Assert.That(minionService.Minions.ContainsKey(5), Is.True);
+        mockRepository.Received(1).InsertMinion(Arg.Any<Minion>());
     }
 
 

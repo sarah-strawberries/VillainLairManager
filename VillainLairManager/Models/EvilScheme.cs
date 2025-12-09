@@ -20,6 +20,7 @@ namespace VillainLairManager.Models
         public DateTime TargetCompletionDate { get; set; }
         public int DiabolicalRating { get; set; }
         public int SuccessLikelihood { get; set; }
+        public int? PrimaryBaseId { get; set; }
         
         // Tracking assigned resources
         /// <summary>

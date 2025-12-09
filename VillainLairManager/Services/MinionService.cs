@@ -64,7 +64,23 @@ namespace VillainLairManager.Services
         {
             ValidateMinionData(minion);
             DatabaseHelper.InsertMinion(minion);
-            Minions[minion.MinionId] = minion;
+            
+            // Reload minions from database to get the auto-generated ID
+            var allMinions = DatabaseHelper.GetAllMinions();
+            if (allMinions != null && allMinions.Count > 0)
+            {
+                Minions = allMinions.ToDictionary(m => m.MinionId);
+                
+                // Return the minion with the correct ID (find it by name and other fields)
+                var createdMinion = allMinions.FirstOrDefault(m => 
+                    m.Name == minion.Name && 
+                    m.Specialty == minion.Specialty &&
+                    m.SkillLevel == minion.SkillLevel &&
+                    m.SalaryDemand == minion.SalaryDemand);
+                
+                return createdMinion ?? minion;
+            }
+            
             return minion;
         }
 

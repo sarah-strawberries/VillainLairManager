@@ -1,3 +1,5 @@
+using VillainLairManager.Models;
+
 namespace VillainLairManager.Services
 {
     /// <summary>
@@ -13,7 +15,7 @@ namespace VillainLairManager.Services
         /// <summary>
         /// Performs maintenance on equipment and returns the cost
         /// </summary>
-        decimal PerformMaintenance(int equipmentId);
+        decimal PerformMaintenance(int equipmentId, decimal availableFunds);
 
         /// <summary>
         /// Checks if equipment is operational (condition meets minimum threshold)
@@ -24,5 +26,15 @@ namespace VillainLairManager.Services
         /// Checks if equipment is broken (condition below broken threshold)
         /// </summary>
         bool IsBroken(int equipmentId);
+
+        /// <summary>
+        /// Validates if equipment can be assigned to a scheme
+        /// </summary>
+        (bool IsValid, string Message) ValidateAssignment(int equipmentId, int schemeId);
+
+        /// <summary>
+        /// Validates equipment data (category, condition, costs)
+        /// </summary>
+        (bool IsValid, string Message) ValidateEquipment(Equipment equipment);
     }
 }
