@@ -1,3 +1,5 @@
+using VillainLairManager.Models;
+
 namespace VillainLairManager.Services
 {
     /// <summary>
@@ -5,6 +7,31 @@ namespace VillainLairManager.Services
     /// </summary>
     public interface IMinionService
     {
+        /// <summary>
+        /// Get a minion by ID
+        /// </summary>
+        Minion GetMinionById(int minionId);
+
+        /// <summary>
+        /// Get all minions
+        /// </summary>
+        IEnumerable<Minion> GetAllMinions();
+
+        /// <summary>
+        /// Create a new minion
+        /// </summary>
+        Minion CreateMinion(Minion minion);
+
+        /// <summary>
+        /// Update an existing minion
+        /// </summary>
+        void UpdateMinion(Minion minion);
+
+        /// <summary>
+        /// Delete a minion by ID
+        /// </summary>
+        void DeleteMinion(int minionId);
+
         /// <summary>
         /// Updates the mood status of a minion based on their loyalty score
         /// </summary>

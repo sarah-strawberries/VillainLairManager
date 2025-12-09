@@ -12,6 +12,86 @@ namespace VillainLairManager.Services
     {
         public Dictionary<int, Minion> Minions { get; set; }
 
+        public MinionService() : this(null)
+        {
+            // Parameterless constructor for testing
+        }
+
+        /// <summary>
+        /// Initialize the service by loading all minions from the database
+        /// </summary>
+        public void Initialize()
+        {
+            var allMinions = DatabaseHelper.GetAllMinions();
+            Minions = allMinions.ToDictionary(m => m.MinionId);
+        }
+
+        /// <summary>
+        /// Factory method to create an initialized MinionService with all minions loaded from database
+        /// </summary>
+        public static MinionService CreateInitialized(IRepository repository)
+        {
+            var service = new MinionService(repository);
+            var allMinions = repository.GetAllMinions();
+            service.Minions = allMinions.ToDictionary(m => m.MinionId);
+            return service;
+        }
+
+        /// <summary>
+        /// Get a minion by ID
+        /// </summary>
+        public Minion GetMinionById(int minionId)
+        {
+            if (Minions.TryGetValue(minionId, out var minion))
+            {
+                return minion;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Get all minions
+        /// </summary>
+        public IEnumerable<Minion> GetAllMinions()
+        {
+            return Minions.Values.ToList();
+        }
+
+        /// <summary>
+        /// Create a new minion
+        /// </summary>
+        public Minion CreateMinion(Minion minion)
+        {
+            DatabaseHelper.InsertMinion(minion);
+            Minions[minion.MinionId] = minion;
+            return minion;
+        }
+
+        /// <summary>
+        /// Update an existing minion
+        /// </summary>
+        public void UpdateMinion(Minion minion)
+        {
+            if (Minions.ContainsKey(minion.MinionId))
+            {
+                DatabaseHelper.UpdateMinion(minion);
+                Minions[minion.MinionId] = minion;
+            }
+        }
+
+        /// <summary>
+        /// Delete a minion by ID
+        /// </summary>
+        public void DeleteMinion(int minionId)
+        {
+            if (Minions.ContainsKey(minionId))
+            {
+                var minion = Minions[minionId];
+                DatabaseHelper.DeleteMinion(minionId);
+                Minions.Remove(minionId);
+            }
+        }
+
         public void UpdateMood(int minionid)
         {
             var minion = Minions[minionid];

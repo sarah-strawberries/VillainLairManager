@@ -1,14 +1,14 @@
 # Requirements
 
 ## 15pts
-- [ ] Business logic extraction into service classes
-- [ ] Comprehensive unit tests for business logic with proper mocking
+- [X] Business logic extraction into service classes
+- [ ] Comprehensive unit tests for business logic with proper mocking: Minion
 ## 10pts
-- [ ] Implementation of two management forms with full CRUD operations
+- [ ] Implementation of two management forms with full CRUD operations: Minion 
 - [ ] Repository pattern implementation with interfaces
 ## 8pts
 - [ ] Identification and explanation of five or more anti-patterns with specific locations
-     - [ ] 1.
+     - [X] 1. DatabaseHelper.cs singleton-dependencyInjected
      - [ ] 2.
      - [ ] 3.
      - [ ] 4.

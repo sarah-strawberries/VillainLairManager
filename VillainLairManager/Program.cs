@@ -23,10 +23,11 @@ namespace VillainLairManager
             
             // Register core services
             services.AddSingleton<IRepository, DatabaseHelper>();
-            services.AddSingleton<IMinionService, MinionService>();
             services.AddSingleton<IEvilSchemeService, EvilSchemeService>();
             services.AddSingleton<ISecretBaseService, SecretBaseService>();
             services.AddSingleton<IEquipmentService, EquipmentService>();
+            services.AddSingleton<IMinionService>(provider => 
+                MinionService.CreateInitialized(provider.GetRequiredService<IRepository>()));
             
             // Register Forms
             services.AddTransient<MainForm>();
