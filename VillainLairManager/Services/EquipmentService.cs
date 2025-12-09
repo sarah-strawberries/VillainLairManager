@@ -208,5 +208,65 @@ namespace VillainLairManager.Services
 
             return (true, "Equipment Valid");
         }
+
+        public void AddEquipment(Equipment equipment)
+        {
+            var validation = ValidateEquipment(equipment);
+            if (!validation.IsValid)
+            {
+                throw new Exception(validation.Message);
+            }
+            DatabaseHelper.InsertEquipment(equipment);
+            
+            // Update cache
+            if (Equipment != null)
+            {
+                var allEquipment = DatabaseHelper.GetAllEquipment();
+                Equipment = allEquipment.ToDictionary(e => e.EquipmentId);
+            }
+        }
+
+        public void UpdateEquipment(Equipment equipment)
+        {
+            var validation = ValidateEquipment(equipment);
+            if (!validation.IsValid)
+            {
+                throw new Exception(validation.Message);
+            }
+            DatabaseHelper.UpdateEquipment(equipment);
+            
+            // Update cache
+            if (Equipment != null)
+            {
+                Equipment[equipment.EquipmentId] = equipment;
+            }
+        }
+
+        public void DeleteEquipment(int equipmentId)
+        {
+            var equipment = DatabaseHelper.GetEquipmentById(equipmentId);
+            if (equipment == null) return;
+
+            // Handle side effects
+            if (equipment.AssignedToSchemeId.HasValue)
+            {
+                var scheme = DatabaseHelper.GetSchemeById(equipment.AssignedToSchemeId.Value);
+                if (scheme != null)
+                {
+                    // Recalculate success likelihood (-5%)
+                    scheme.SuccessLikelihood -= 5;
+                    if (scheme.SuccessLikelihood < 0) scheme.SuccessLikelihood = 0;
+                    DatabaseHelper.UpdateScheme(scheme);
+                }
+            }
+
+            DatabaseHelper.DeleteEquipment(equipmentId);
+            
+            // Update cache
+            if (Equipment != null)
+            {
+                Equipment.Remove(equipmentId);
+            }
+        }
     }
 }

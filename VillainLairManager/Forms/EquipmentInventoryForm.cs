@@ -138,14 +138,7 @@ namespace VillainLairManager.Forms
                     LastMaintenanceDate = DateTime.Now
                 };
 
-                var validation = _equipmentService.ValidateEquipment(equipment);
-                if (!validation.IsValid)
-                {
-                    MessageBox.Show(validation.Message, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-
-                _repository.InsertEquipment(equipment);
+                _equipmentService.AddEquipment(equipment);
                 LoadData();
                 MessageBox.Show("Equipment added successfully!");
             }
@@ -162,6 +155,7 @@ namespace VillainLairManager.Forms
             try
             {
                 int id = (int)dgvEquipment.SelectedRows[0].Cells["EquipmentId"].Value;
+                // We need to get the original object to preserve other fields like AssignedToSchemeId
                 var equipment = _repository.GetEquipmentById(id);
                 
                 equipment.Name = txtName.Text;
@@ -171,14 +165,7 @@ namespace VillainLairManager.Forms
                 equipment.MaintenanceCost = numMaintenanceCost.Value;
                 equipment.RequiresSpecialist = chkSpecialist.Checked;
 
-                var validation = _equipmentService.ValidateEquipment(equipment);
-                if (!validation.IsValid)
-                {
-                    MessageBox.Show(validation.Message, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-
-                _repository.UpdateEquipment(equipment);
+                _equipmentService.UpdateEquipment(equipment);
                 LoadData();
                 MessageBox.Show("Equipment updated successfully!");
             }
@@ -197,7 +184,7 @@ namespace VillainLairManager.Forms
                 try
                 {
                     int id = (int)dgvEquipment.SelectedRows[0].Cells["EquipmentId"].Value;
-                    _repository.DeleteEquipment(id);
+                    _equipmentService.DeleteEquipment(id);
                     LoadData();
                 }
                 catch (Exception ex)

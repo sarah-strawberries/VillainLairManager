@@ -19,6 +19,7 @@ namespace VillainousTesting
         public void Setup()
         {
             _mockRepository = Substitute.For<IRepository>();
+            _mockRepository.GetAllEquipment().Returns(new List<Equipment>());
             _equipmentService = new EquipmentService(_mockRepository);
             _equipmentService.Equipment = new Dictionary<int, Equipment>();
         }
@@ -81,6 +82,7 @@ namespace VillainousTesting
                 LastMaintenanceDate = DateTime.Now.AddMonths(-5) // Old maintenance
             };
             _equipmentService.Equipment[equipmentId] = equipment;
+            _mockRepository.GetEquipmentById(equipmentId).Returns(equipment);
 
             // Act & Assert
             if (expectSuccess)
@@ -220,6 +222,80 @@ namespace VillainousTesting
 
             // Assert
             Assert.That(result.IsValid, Is.EqualTo(expectValid), $"Doomsday validation failed. Message: {result.Message}");
+        }
+
+        [Test]
+        public void AddEquipment_ValidEquipment_InsertsIntoRepository()
+        {
+            var equipment = new Equipment { Category = "Weapon", Condition = 100, PurchasePrice = 100, MaintenanceCost = 10 };
+            _mockRepository.GetAllEquipment().Returns(new List<Equipment>()); // For cache refresh
+
+            _equipmentService.AddEquipment(equipment);
+
+            _mockRepository.Received().InsertEquipment(equipment);
+        }
+
+        [Test]
+        public void AddEquipment_InvalidEquipment_ThrowsException()
+        {
+            var equipment = new Equipment { Category = "Invalid", Condition = 100, PurchasePrice = 100, MaintenanceCost = 10 };
+
+            var ex = Assert.Throws<Exception>(() => _equipmentService.AddEquipment(equipment));
+            Assert.That(ex.Message, Does.Contain("Invalid category"));
+            _mockRepository.DidNotReceive().InsertEquipment(equipment);
+        }
+
+        [Test]
+        public void UpdateEquipment_ValidEquipment_UpdatesRepository()
+        {
+            var equipment = new Equipment { EquipmentId = 1, Category = "Weapon", Condition = 100, PurchasePrice = 100, MaintenanceCost = 10 };
+            
+            _equipmentService.UpdateEquipment(equipment);
+
+            _mockRepository.Received().UpdateEquipment(equipment);
+        }
+
+        [Test]
+        public void UpdateEquipment_InvalidEquipment_ThrowsException()
+        {
+            var equipment = new Equipment { EquipmentId = 1, Category = "Invalid", Condition = 100, PurchasePrice = 100, MaintenanceCost = 10 };
+
+            var ex = Assert.Throws<Exception>(() => _equipmentService.UpdateEquipment(equipment));
+            Assert.That(ex.Message, Does.Contain("Invalid category"));
+            _mockRepository.DidNotReceive().UpdateEquipment(equipment);
+        }
+
+        [Test]
+        public void DeleteEquipment_Unassigned_DeletesFromRepository()
+        {
+            int equipmentId = 1;
+            var equipment = new Equipment { EquipmentId = equipmentId, AssignedToSchemeId = null };
+            _mockRepository.GetEquipmentById(equipmentId).Returns(equipment);
+
+            _equipmentService.DeleteEquipment(equipmentId);
+
+            _mockRepository.Received().DeleteEquipment(equipmentId);
+        }
+
+        [Test]
+        public void DeleteEquipment_Assigned_UpdatesSchemeAndDeletes()
+        {
+            int equipmentId = 1;
+            int schemeId = 101;
+            var equipment = new Equipment { EquipmentId = equipmentId, AssignedToSchemeId = schemeId };
+            var scheme = new EvilScheme { SchemeId = schemeId, SuccessLikelihood = 50 };
+            
+            _mockRepository.GetEquipmentById(equipmentId).Returns(equipment);
+            _mockRepository.GetSchemeById(schemeId).Returns(scheme);
+
+            _equipmentService.DeleteEquipment(equipmentId);
+
+            // Verify scheme update
+            Assert.That(scheme.SuccessLikelihood, Is.EqualTo(45)); // 50 - 5
+            _mockRepository.Received().UpdateScheme(scheme);
+            
+            // Verify deletion
+            _mockRepository.Received().DeleteEquipment(equipmentId);
         }
     }
 }

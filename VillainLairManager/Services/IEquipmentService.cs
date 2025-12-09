@@ -36,5 +36,20 @@ namespace VillainLairManager.Services
         /// Validates equipment data (category, condition, costs)
         /// </summary>
         (bool IsValid, string Message) ValidateEquipment(Equipment equipment);
+
+        /// <summary>
+        /// Adds new equipment after validation
+        /// </summary>
+        void AddEquipment(Equipment equipment);
+
+        /// <summary>
+        /// Updates existing equipment after validation
+        /// </summary>
+        void UpdateEquipment(Equipment equipment);
+
+        /// <summary>
+        /// Deletes equipment and handles side effects (scheme updates)
+        /// </summary>
+        void DeleteEquipment(int equipmentId);
     }
 }
