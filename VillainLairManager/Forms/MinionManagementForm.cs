@@ -1,5 +1,6 @@
 using System;
 using System.Windows.Forms;
+using VillainLairManager.Services;
 
 namespace VillainLairManager.Forms
 {
@@ -9,8 +10,13 @@ namespace VillainLairManager.Forms
     /// </summary>
     public partial class MinionManagementForm : Form
     {
-        public MinionManagementForm()
+        private readonly IRepository _repository;
+        private readonly IMinionService _minionService;
+
+        public MinionManagementForm(IRepository repository, IMinionService minionService)
         {
+            _repository = repository;
+            _minionService = minionService;
             InitializeComponent();
         }
 

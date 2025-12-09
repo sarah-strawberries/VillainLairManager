@@ -3,7 +3,6 @@ using VillainLairManager.Services;
 using NSubstitute;
 using NUnit.Framework;
 using VillainLairManager;
-using Assert = NUnit.Framework.Assert;
 namespace VillainousTesting;
 
 public class MinionTests
@@ -36,6 +35,6 @@ public class MinionTests
             { 1, new Minion { MinionId = 1, Name = "Test Satisfied Minion", LoyaltyScore = 70, SalaryDemand=5000} }
         };
         minionService.UpdateLoyalty(1, 5000);
-        Assert.AreEqual(73, minionService.Minions[1].LoyaltyScore);
+        Assert.That(minionService.Minions[1].LoyaltyScore, Is.EqualTo(73));
     }
 }

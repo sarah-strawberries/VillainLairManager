@@ -1,12 +1,18 @@
 using System;
 using System.Windows.Forms;
+using VillainLairManager.Services;
 
 namespace VillainLairManager.Forms
 {
     public partial class BaseManagementForm : Form
     {
-        public BaseManagementForm()
+        private readonly IRepository _repository;
+        private readonly ISecretBaseService _secretBaseService;
+
+        public BaseManagementForm(IRepository repository, ISecretBaseService secretBaseService)
         {
+            _repository = repository;
+            _secretBaseService = secretBaseService;
             InitializeComponent();
         }
 

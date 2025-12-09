@@ -1,6 +1,8 @@
 using System;
 using System.Windows.Forms;
+using Microsoft.Extensions.DependencyInjection;
 using VillainLairManager.Forms;
+using VillainLairManager.Services;
 
 namespace VillainLairManager
 {
@@ -16,17 +18,33 @@ namespace VillainLairManager
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            // Initialize database - no error handling (anti-pattern)
-            var dbHelper = new DatabaseHelper();
+            // Setup Dependency Injection
+            var services = new ServiceCollection();
+            
+            // Register core services
+            services.AddSingleton<IRepository, DatabaseHelper>();
+            services.AddSingleton<IMinionService, MinionService>();
+            services.AddSingleton<IEvilSchemeService, EvilSchemeService>();
+            services.AddSingleton<ISecretBaseService, SecretBaseService>();
+            services.AddSingleton<IEquipmentService, EquipmentService>();
+            
+            // Register Forms
+            services.AddTransient<MainForm>();
+            services.AddTransient<MinionManagementForm>();
+            services.AddTransient<SchemeManagementForm>();
+            services.AddTransient<BaseManagementForm>();
+            services.AddTransient<EquipmentInventoryForm>();
+            
+            var serviceProvider = services.BuildServiceProvider();
+            
+            // Initialize database
+            var dbHelper = serviceProvider.GetRequiredService<IRepository>();
             dbHelper.Initialize();
-
-            // Create schema if needed
             dbHelper.CreateSchemaIfNotExists();
-
-            // Seed data on first run - no check if already seeded (anti-pattern)
             dbHelper.SeedInitialData();
 
-            Application.Run(new MainForm(dbHelper));
+            // Run the application
+            Application.Run(serviceProvider.GetRequiredService<MainForm>());
         }
     }
 }

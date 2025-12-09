@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using Microsoft.Extensions.DependencyInjection;
 using VillainLairManager.Models;
 using VillainLairManager.Utils;
 
@@ -14,32 +15,34 @@ namespace VillainLairManager.Forms
     public partial class MainForm : Form
     {
         private readonly IRepository _databaseHelper;
+        private readonly IServiceProvider _serviceProvider;
 
-        public MainForm(IRepository databaseHelper)
+        public MainForm(IRepository databaseHelper, IServiceProvider serviceProvider)
         {
             _databaseHelper = databaseHelper;
+            _serviceProvider = serviceProvider;
             InitializeComponent();
             LoadStatistics(); // Business logic in form load (anti-pattern)
         }
 
         private void btnMinions_Click(object sender, EventArgs e)
         {
-            OpenForm(new MinionManagementForm());
+            OpenForm(_serviceProvider.GetRequiredService<MinionManagementForm>());
         }
 
         private void btnSchemes_Click(object sender, EventArgs e)
         {
-            OpenForm(new SchemeManagementForm());
+            OpenForm(_serviceProvider.GetRequiredService<SchemeManagementForm>());
         }
 
         private void btnBases_Click(object sender, EventArgs e)
         {
-            OpenForm(new BaseManagementForm());
+            OpenForm(_serviceProvider.GetRequiredService<BaseManagementForm>());
         }
 
         private void btnEquipment_Click(object sender, EventArgs e)
         {
-            OpenForm(new EquipmentInventoryForm());
+            OpenForm(_serviceProvider.GetRequiredService<EquipmentInventoryForm>());
         }
 
         private void OpenForm(Form form)
@@ -73,17 +76,14 @@ namespace VillainLairManager.Forms
 
             lblMinionStats.Text = $"Minions: {minions.Count} total | Happy: {happyCount} | Grumpy: {grumpyCount} | Plotting Betrayal: {betrayalCount}";
 
-            // Scheme statistics with duplicated success calculation
+            // Scheme statistics
             var activeSchemes = schemes.Where(s => s.Status == "Active").ToList();
             double avgSuccess = 0;
             if (activeSchemes.Any())
             {
-                // Success likelihood calculation duplicated here (anti-pattern)
                 foreach (var scheme in activeSchemes)
                 {
-                    // This is also in EvilScheme.CalculateSuccessLikelihood() - duplication!
-                    int success = scheme.CalculateSuccessLikelihood();
-                    avgSuccess += success;
+                    avgSuccess += scheme.SuccessLikelihood;
                 }
                 avgSuccess /= activeSchemes.Count;
             }

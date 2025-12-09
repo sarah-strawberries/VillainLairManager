@@ -1,12 +1,18 @@
 using System;
 using System.Windows.Forms;
+using VillainLairManager.Services;
 
 namespace VillainLairManager.Forms
 {
     public partial class SchemeManagementForm : Form
     {
-        public SchemeManagementForm()
+        private readonly IRepository _repository;
+        private readonly IEvilSchemeService _evilSchemeService;
+
+        public SchemeManagementForm(IRepository repository, IEvilSchemeService evilSchemeService)
         {
+            _repository = repository;
+            _evilSchemeService = evilSchemeService;
             InitializeComponent();
         }
 
