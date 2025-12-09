@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using VillainLairManager.Models;
 using VillainLairManager.Utils;
 
@@ -49,6 +50,11 @@ namespace VillainLairManager.Services
         {
             var equipment = Equipment[equipmentId];
 
+            if (equipment.Condition >= 100)
+            {
+                throw new Exception("Equipment is already in perfect condition");
+            }
+
             decimal cost;
             if (equipment.Category == "Doomsday Device")
             {
@@ -57,6 +63,11 @@ namespace VillainLairManager.Services
             else
             {
                 cost = equipment.PurchasePrice * ConfigManager.MaintenanceCostPercentage;
+            }
+
+            if (availableFunds < cost)
+            {
+                throw new Exception("Insufficient funds for maintenance");
             }
 
             equipment.Condition = 100;
@@ -87,12 +98,100 @@ namespace VillainLairManager.Services
 
         public (bool IsValid, string Message) ValidateAssignment(int equipmentId, int schemeId)
         {
-            throw new NotImplementedException();
+            var equipment = Equipment[equipmentId];
+            var scheme = DatabaseHelper.GetSchemeById(schemeId);
+            
+            // Check 1: Condition Requirement
+            if (equipment.Condition < ConfigManager.MinEquipmentCondition)
+            {
+                return (false, "Equipment condition too low for use");
+            }
+
+            // Check 2: Storage Location
+            if (!equipment.StoredAtBaseId.HasValue)
+            {
+                return (false, "Equipment must be stored at a base first");
+            }
+
+            // Check 3: Not Already Assigned
+            if (equipment.AssignedToSchemeId.HasValue)
+            {
+                var assignedScheme = DatabaseHelper.GetSchemeById(equipment.AssignedToSchemeId.Value);
+                if (assignedScheme != null && assignedScheme.Status == ConfigManager.StatusActive)
+                {
+                    return (false, "Equipment already assigned to another active scheme");
+                }
+            }
+
+            // Check 4: Specialist Requirement & Doomsday Rules
+            int requiredSkill = ConfigManager.SpecialistSkillLevel; // 8
+            bool requiresSpecialist = equipment.RequiresSpecialist;
+
+            if (equipment.Category == "Doomsday Device")
+            {
+                requiresSpecialist = true;
+                requiredSkill = 9; // Rule 7
+
+                // Doomsday Storage Check (Warning only)
+                var storedBase = DatabaseHelper.GetBaseById(equipment.StoredAtBaseId.Value);
+                if (storedBase != null && !storedBase.HasDoomsdayDevice)
+                {
+                     // Warning: "Base not equipped to store doomsday devices" - but returns Valid per tests
+                }
+
+                // Doomsday Rating Check (Warning only)
+                if (scheme.DiabolicalRating < 8)
+                {
+                    // Warning: "Doomsday device overkill for low-rated scheme" - but returns Valid per tests
+                }
+            }
+
+            if (requiresSpecialist)
+            {
+                var schemeMinions = DatabaseHelper.GetAllMinions().Where(m => m.CurrentSchemeId == schemeId).ToList();
+                
+                bool hasSpecialist = schemeMinions.Any(m => m.SkillLevel >= requiredSkill);
+                if (!hasSpecialist)
+                {
+                    return (false, $"Equipment requires a specialist minion (skill {requiredSkill}+)");
+                }
+            }
+
+            // Check 5: Location Match (Warning only)
+            if (scheme.PrimaryBaseId.HasValue && equipment.StoredAtBaseId != scheme.PrimaryBaseId)
+            {
+                // Warning
+            }
+
+            return (true, "Assignment Valid");
         }
 
         public (bool IsValid, string Message) ValidateEquipment(Equipment equipment)
         {
-            throw new NotImplementedException();
+            // Rule 4: Category Validation
+            if (string.IsNullOrEmpty(equipment.Category) || !ConfigManager.ValidCategories.Contains(equipment.Category))
+            {
+                return (false, "Invalid category");
+            }
+
+            // Rule 5: Condition Range Validation
+            if (equipment.Condition < 0 || equipment.Condition > 100)
+            {
+                return (false, "Condition must be between 0 and 100");
+            }
+
+            // Rule 6: Cost Validation
+            if (equipment.PurchasePrice <= 0)
+            {
+                return (false, "Purchase price must be greater than zero");
+            }
+            if (equipment.MaintenanceCost < 0)
+            {
+                return (false, "Maintenance cost cannot be negative");
+            }
+            // Warning if MaintenanceCost > PurchasePrice, but valid.
+
+            return (true, "Equipment Valid");
         }
     }
 }
