@@ -21,7 +21,17 @@ namespace VillainLairManager.Services
                 var scheme = DatabaseHelper.GetSchemeById(equipment.AssignedToSchemeId.Value);
                 if (scheme != null && scheme.Status == ConfigManager.StatusActive)
                 {
-                    int monthsSinceMaintenance = 1; // Simplified - should calculate from LastMaintenanceDate
+                    int monthsSinceMaintenance = 0;
+                    if (equipment.LastMaintenanceDate.HasValue)
+                    {
+                        var now = DateTime.Now;
+                        var last = equipment.LastMaintenanceDate.Value;
+                        monthsSinceMaintenance = ((now.Year - last.Year) * 12) + now.Month - last.Month;
+                        
+                        // Ensure we don't get negative values if dates are weird
+                        if (monthsSinceMaintenance < 0) monthsSinceMaintenance = 0;
+                    }
+
                     int degradation = monthsSinceMaintenance * ConfigManager.ConditionDegradationRate;
                     equipment.Condition -= degradation;
 
@@ -35,7 +45,7 @@ namespace VillainLairManager.Services
         /// <summary>
         /// Performs maintenance on equipment and returns the cost
         /// </summary>
-        public decimal PerformMaintenance(int equipmentId)
+        public decimal PerformMaintenance(int equipmentId, decimal availableFunds)
         {
             var equipment = Equipment[equipmentId];
 
@@ -73,6 +83,16 @@ namespace VillainLairManager.Services
         {
             var equipment = Equipment[equipmentId];
             return equipment.Condition < ConfigManager.BrokenEquipmentCondition;
+        }
+
+        public (bool IsValid, string Message) ValidateAssignment(int equipmentId, int schemeId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public (bool IsValid, string Message) ValidateEquipment(Equipment equipment)
+        {
+            throw new NotImplementedException();
         }
     }
 }
