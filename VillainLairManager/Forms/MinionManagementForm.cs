@@ -2,6 +2,7 @@ using System;
 using System.Windows.Forms;
 using VillainLairManager.Services;
 using VillainLairManager.Models;
+using VillainLairManager.Utils;
 using System.Linq;
 
 namespace VillainLairManager.Forms
@@ -21,7 +22,7 @@ namespace VillainLairManager.Forms
         private Label lblName;
         private TextBox txtName;
         private Label lblSpecialty;
-        private TextBox txtSpecialty;
+        private ComboBox cmbSpecialty;
         private Label lblSkillLevel;
         private TextBox txtSkillLevel;
         private Label lblSalary;
@@ -31,6 +32,11 @@ namespace VillainLairManager.Forms
         private ComboBox cmbBase;
         private Label lblScheme;
         private ComboBox cmbScheme;
+
+        private Button btnAdd;
+        private Button btnUpdate;
+        private Button btnDelete;
+        private Button btnRefresh;
 
         public MinionManagementForm(IRepository repository, IMinionService minionService)
         {
@@ -78,7 +84,7 @@ namespace VillainLairManager.Forms
 
             // Specialty
             this.lblSpecialty = new Label { Text = "Specialty:", Location = new System.Drawing.Point(col2LabelX, startY), AutoSize = true };
-            this.txtSpecialty = new TextBox { Location = new System.Drawing.Point(col2InputX, startY), Width = 200 };
+            this.cmbSpecialty = new ComboBox { Location = new System.Drawing.Point(col2InputX, startY), Width = 200, DropDownStyle = ComboBoxStyle.DropDownList };
 
             // Skill Level
             this.lblSkillLevel = new Label { Text = "Skill Level:", Location = new System.Drawing.Point(labelX, startY + spacing), AutoSize = true };
@@ -96,11 +102,27 @@ namespace VillainLairManager.Forms
             this.lblScheme = new Label { Text = "Scheme Assignment:", Location = new System.Drawing.Point(col2LabelX, startY + spacing * 2), AutoSize = true };
             this.cmbScheme = new ComboBox { Location = new System.Drawing.Point(col2InputX, startY + spacing * 2), Width = 200, DropDownStyle = ComboBoxStyle.DropDownList };
 
+            // Buttons
+            int btnY = 480;
+            int btnWidth = 100;
+            int btnSpacing = 20;
+            int startBtnX = (this.ClientSize.Width - (4 * btnWidth + 3 * btnSpacing)) / 2;
+
+            this.btnAdd = new Button { Text = "Add", Location = new System.Drawing.Point(startBtnX, btnY), Size = new System.Drawing.Size(btnWidth, 30) };
+            this.btnAdd.Click += BtnAdd_Click;
+            this.btnUpdate = new Button { Text = "Update", Location = new System.Drawing.Point(startBtnX + btnWidth + btnSpacing, btnY), Size = new System.Drawing.Size(btnWidth, 30) };
+            this.btnUpdate.Click += BtnUpdate_Click;
+            this.btnDelete = new Button { Text = "Delete", Location = new System.Drawing.Point(startBtnX + 2 * (btnWidth + btnSpacing), btnY), Size = new System.Drawing.Size(btnWidth, 30) };
+            this.btnDelete.Click += BtnDelete_Click;
+            this.btnRefresh = new Button { Text = "Refresh", Location = new System.Drawing.Point(startBtnX + 3 * (btnWidth + btnSpacing), btnY), Size = new System.Drawing.Size(btnWidth, 30) };
+            this.btnRefresh.Click += BtnRefresh_Click;
+
             this.Controls.AddRange(new Control[] { 
                 lblTitle, dgvMinions, 
-                lblName, txtName, lblSpecialty, txtSpecialty,
+                lblName, txtName, lblSpecialty, cmbSpecialty,
                 lblSkillLevel, txtSkillLevel, lblSalary, txtSalary,
-                lblBase, cmbBase, lblScheme, cmbScheme
+                lblBase, cmbBase, lblScheme, cmbScheme,
+                btnAdd, btnUpdate, btnDelete, btnRefresh
             });
         }
 
@@ -115,6 +137,9 @@ namespace VillainLairManager.Forms
         {
             try
             {
+                cmbSpecialty.DataSource = ConfigManager.ValidSpecialties;
+                cmbSpecialty.SelectedIndex = -1;
+
                 var bases = _repository.GetAllBases();
                 cmbBase.DataSource = bases;
                 cmbBase.DisplayMember = "Name";
@@ -154,7 +179,7 @@ namespace VillainLairManager.Forms
                 if (minion != null)
                 {
                     txtName.Text = minion.Name;
-                    txtSpecialty.Text = minion.Specialty;
+                    cmbSpecialty.SelectedItem = minion.Specialty;
                     txtSkillLevel.Text = minion.SkillLevel.ToString();
                     txtSalary.Text = minion.SalaryDemand.ToString();
                     
@@ -169,6 +194,95 @@ namespace VillainLairManager.Forms
                         cmbScheme.SelectedIndex = -1;
                 }
             }
+        }
+
+        private void BtnAdd_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var minion = new Minion
+                {
+                    Name = txtName.Text,
+                    Specialty = cmbSpecialty.Text,
+                    SkillLevel = int.Parse(txtSkillLevel.Text),
+                    SalaryDemand = decimal.Parse(txtSalary.Text),
+                    CurrentBaseId = cmbBase.SelectedValue as int?,
+                    CurrentSchemeId = cmbScheme.SelectedValue as int?,
+                    MoodStatus = ConfigManager.MoodHappy,
+                    LastMoodUpdate = DateTime.Now,
+                    LoyaltyScore = 50 // Default starting loyalty
+                };
+
+                _minionService.CreateMinion(minion);
+                LoadMinions();
+                ClearInputs();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error adding minion: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnUpdate_Click(object sender, EventArgs e)
+        {
+            if (dgvMinions.SelectedRows.Count == 0) return;
+
+            try
+            {
+                var selectedMinion = dgvMinions.SelectedRows[0].DataBoundItem as Minion;
+                if (selectedMinion == null) return;
+
+                selectedMinion.Name = txtName.Text;
+                selectedMinion.Specialty = cmbSpecialty.Text;
+                selectedMinion.SkillLevel = int.Parse(txtSkillLevel.Text);
+                selectedMinion.SalaryDemand = decimal.Parse(txtSalary.Text);
+                selectedMinion.CurrentBaseId = cmbBase.SelectedValue as int?;
+                selectedMinion.CurrentSchemeId = cmbScheme.SelectedValue as int?;
+
+                _minionService.UpdateMinion(selectedMinion);
+                LoadMinions();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error updating minion: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnDelete_Click(object sender, EventArgs e)
+        {
+            if (dgvMinions.SelectedRows.Count == 0) return;
+
+            try
+            {
+                var selectedMinion = dgvMinions.SelectedRows[0].DataBoundItem as Minion;
+                if (selectedMinion == null) return;
+
+                if (MessageBox.Show($"Are you sure you want to delete {selectedMinion.Name}?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+                {
+                    _minionService.DeleteMinion(selectedMinion.MinionId);
+                    LoadMinions();
+                    ClearInputs();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error deleting minion: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnRefresh_Click(object sender, EventArgs e)
+        {
+            LoadMinions();
+        }
+
+        private void ClearInputs()
+        {
+            txtName.Clear();
+            cmbSpecialty.SelectedIndex = -1;
+            txtSkillLevel.Clear();
+            txtSalary.Clear();
+            cmbBase.SelectedIndex = -1;
+            cmbScheme.SelectedIndex = -1;
         }
     }
 }
