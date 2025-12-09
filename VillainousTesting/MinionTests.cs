@@ -88,7 +88,7 @@ public class MinionTests
     [Test]
     public void CreateMinion_AddsToCache_AndCallsRepository()
     {
-        var newMinion = new Minion { MinionId = 5, Name = "New Minion", LoyaltyScore = 50 };
+        var newMinion = new Minion { MinionId = 5, Name = "New Minion", LoyaltyScore = 50, Specialty = "Hacking", SkillLevel = 5, SalaryDemand = 5000m };
         var minionService = new MinionService(mockRepository);
         minionService.Minions = new Dictionary<int, Minion>();
 
@@ -102,7 +102,7 @@ public class MinionTests
     [Test]
     public void UpdateMinion_UpdatesCache_AndCallsRepository()
     {
-        var minion = new Minion { MinionId = 1, Name = "Original", LoyaltyScore = 50 };
+        var minion = new Minion { MinionId = 1, Name = "Original", LoyaltyScore = 50, Specialty = "Combat", SkillLevel = 5, SalaryDemand = 5000m };
         var minionService = new MinionService(mockRepository);
         minionService.Minions = new Dictionary<int, Minion> { { 1, minion } };
 
