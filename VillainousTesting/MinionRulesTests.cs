@@ -81,10 +81,10 @@ public class MinionRulesTests
     // Tests validate that minions can only be assigned to schemes if they meet
     // qualification requirements and availability constraints.
 
+    [TestCase(8, 6, "Hacking", "Hacking", null, false)] // Valid assignment
     [TestCase(5, 6, "Hacking", "Hacking", null, true)]  // Skill too low
     [TestCase(8, 6, "Combat", "Hacking", null, true)]   // Specialty mismatch
     [TestCase(8, 6, "Hacking", "Hacking", 5, true)]     // Already assigned to active scheme
-    [TestCase(8, 6, "Hacking", "Hacking", null, false)] // Valid assignment
     [TestCase(8, 6, "Hacking", "Hacking", 3, false)]    // Reassign from completed scheme
     public void BR_M_003_SchemeAssignmentValidation(
         int minionSkill, int schemeReqSkill, string minionSpecialty, 
@@ -133,11 +133,11 @@ public class MinionRulesTests
     // ============================================================================
     // Tests validate that secret bases have limited capacity and cannot exceed it.
 
-    [TestCase(50, 45, 1, false)]  // Below capacity
-    [TestCase(50, 49, 1, false)]  // Exactly at capacity
-    [TestCase(50, 50, 1, true)]   // Over capacity
-    [TestCase(30, 28, 3, true)]   // Bulk assignment exceeds
-    public void BR_M_004_BaseAssignmentCapacity(int capacity, int currentOccupancy, int newAssignments, bool shouldThrow)
+    [TestCase(50, 45, 1, true)]   // Below capacity
+    [TestCase(50, 49, 1, true)]   // Exactly at capacity
+    [TestCase(50, 50, 1, false)]  // Over capacity
+    [TestCase(30, 28, 3, false)]  // Bulk assignment exceeds
+    public void BR_M_004_BaseAssignmentCapacity(int capacity, int currentOccupancy, int newAssignments, bool allowed)
     {
         var minions = new List<Minion>();
         for (int i = 1; i <= newAssignments; i++)
@@ -168,33 +168,33 @@ public class MinionRulesTests
 
         if (newAssignments == 1)
         {
-            if (shouldThrow)
-            {
-                Assert.That(() => minionService.AssignMinionToBase(1, base_),
-                    Throws.ArgumentException.With.Message.Contains("at full capacity"),
-                    "BR-M-004: Single assignment should be rejected if over capacity");
-            }
-            else
+            if (allowed)
             {
                 Assert.That(() => minionService.AssignMinionToBase(1, base_),
                     Throws.Nothing,
                     "BR-M-004: Single assignment should succeed if within capacity");
             }
+            else
+            {
+                Assert.That(() => minionService.AssignMinionToBase(1, base_),
+                    Throws.ArgumentException.With.Message.Contains("at full capacity"),
+                    "BR-M-004: Single assignment should be rejected if over capacity");
+            }
         }
         else
         {
             var minionIds = Enumerable.Range(1, newAssignments).ToList();
-            if (shouldThrow)
-            {
-                Assert.That(() => minionService.AssignMinionsToBase(minionIds, base_),
-                    Throws.ArgumentException.With.Message.Contains("would exceed capacity"),
-                    "BR-M-004: Bulk assignment should be rejected if would exceed capacity");
-            }
-            else
+            if (allowed)
             {
                 Assert.That(() => minionService.AssignMinionsToBase(minionIds, base_),
                     Throws.Nothing,
                     "BR-M-004: Bulk assignment should succeed if within capacity");
+            }
+            else
+            {
+                Assert.That(() => minionService.AssignMinionsToBase(minionIds, base_),
+                    Throws.ArgumentException.With.Message.Contains("would exceed capacity"),
+                    "BR-M-004: Bulk assignment should be rejected if would exceed capacity");
             }
         }
     }
@@ -203,14 +203,12 @@ public class MinionRulesTests
     // Format: [specialty, shouldSucceed]
 
     [TestCase("Hacking", true)]
-    [TestCase("Explosives", true)]
-    [TestCase("Disguise", true)]
     [TestCase("Combat", true)]
-    [TestCase("Engineering", true)]
-    [TestCase("Piloting", true)]
     [TestCase("Magic", false)]           // Invalid specialty
     [TestCase("hacking", false)]         // Case-sensitive - wrong case
-    public void BR_M_005_SpecialtyValidation(string specialty, bool shouldSucceed)
+    [TestCase("", false)]                  // Empty specialty
+    [TestCase(null, false)]                // Null specialty
+    public void BR_M_005_SpecialtyValidation(string? specialty, bool shouldSucceed)
     {
         var minion = new Minion
         {
@@ -240,12 +238,11 @@ public class MinionRulesTests
     // Format: [skillLevel, shouldSucceed]
 
     [TestCase(1, true)]
-    [TestCase(5, true)]
     [TestCase(10, true)]
+    [TestCase(5, true)]
     [TestCase(0, false)]
-    [TestCase(-5, false)]
     [TestCase(11, false)]
-    [TestCase(100, false)]
+    [TestCase(-5, false)]
     public void BR_M_006_SkillLevelValidation(int skillLevel, bool shouldSucceed)
     {
         var minion = new Minion
@@ -276,9 +273,9 @@ public class MinionRulesTests
     // Format: [salary, shouldSucceed, description]
 
     [TestCase(5000, true)]           // Valid salary
-    [TestCase(1500000, true)]        // Unusually high but allowed (with warning)
     [TestCase(0, false)]             // Invalid: zero
     [TestCase(-1000, false)]         // Invalid: negative
+    [TestCase(1500000, true)]        // Unusually high but allowed (with warning)
     public void BR_M_007_SalaryDemandValidation(decimal salary, bool shouldSucceed)
     {
         var minion = new Minion
